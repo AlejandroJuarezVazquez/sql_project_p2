@@ -8,8 +8,6 @@
 
 This project demonstrates the implementation of a Library Management System using SQL. It includes creating and managing tables, performing CRUD operations, and executing advanced SQL queries. The goal is to showcase skills in database design, manipulation, and querying.
 
-![Library_project](https://github.com/najirh/Library-System-Management---P2/blob/main/library.jpg)
-
 ## Objectives
 
 1. **Set up the Library Management System Database**: Create and populate the database with tables for branches, employees, members, books, issued status, and return status.
@@ -20,7 +18,6 @@ This project demonstrates the implementation of a Library Management System usin
 ## Project Structure
 
 ### 1. Database Setup
-![ERD](https://github.com/najirh/Library-System-Management---P2/blob/main/library_erd.png)
 
 - **Database Creation**: Created a database named `library_db`.
 - **Table Creation**: Created tables for branches, employees, members, books, issued status, and return status. Each table includes relevant columns and relationships.
@@ -486,8 +483,32 @@ Description: Write a CTAS query to create a new table that lists each member and
     Member ID
     Number of overdue books
     Total fines
+```sql
 
+CREATE TABLE overdue_books_report AS
+SELECT
+    m.member_id,			-- Identifica al miembro.
+    COUNT(CASE WHEN CURRENT_DATE - ist.issued_date > 30 AND rs.return_date IS NULL THEN 1 END) AS number_overdue_books,	-- Cuenta cuántos libros están vencidos.
+    SUM(CASE 																												-- Considera solo los libros cuya fecha de emisión supera los 30 días y no han sido devueltos
+        WHEN CURRENT_DATE - ist.issued_date > 30 AND rs.return_date IS NULL -- Calcula las multas acumuladas.
+        THEN (CURRENT_DATE - ist.issued_date - 30) * 0.50 					 -- Se resta el período de gracia de 30 días a la diferencia de fechas
+        ELSE 0 																 -- Multiplica el número de días vencidos por $0.50.
+    END) AS total_fines,
+    COUNT(ist.issued_id) AS total_books_issued								-- Cuenta el total de libros emitidos por cada miembro.
+FROM
+    members AS m															-- Relaciona los miembros con los libros emitidos.
+JOIN
+    issued_status AS ist
+    ON m.member_id = ist.issued_member_id
+LEFT JOIN																	-- Relaciona los libros emitidos con sus devoluciones.
+    return_status AS rs
+    ON ist.issued_id = rs.issued_id
+GROUP BY
+    m.member_id;															-- Agrupa los resultados por cada miembro para calcular las métricas requeridas.
 
+SELECT * FROM overdue_books_report 
+
+```
 
 ## Reports
 
@@ -510,13 +531,7 @@ This project demonstrates the application of SQL skills in creating and managing
 3. **Run the Queries**: Use the SQL queries in the `analysis_queries.sql` file to perform the analysis.
 4. **Explore and Modify**: Customize the queries as needed to explore different aspects of the data or answer additional questions.
 
-## Author - Zero Analyst
-
-This project showcases SQL skills essential for database management and analysis. For more content on SQL and data analysis, connect with me through the following channels:
-
-- **YouTube**: [Subscribe to my channel for tutorials and insights](https://www.youtube.com/@zero_analyst)
-- **Instagram**: [Follow me for daily tips and updates](https://www.instagram.com/zero_analyst/)
-- **LinkedIn**: [Connect with me professionally](https://www.linkedin.com/in/najirr)
-- **Discord**: [Join our community for learning and collaboration](https://discord.gg/36h5f2Z5PK)
+## Author - Diego Alejandro
+Based on the work of Zero Analyst
 
 Thank you for your interest in this project!
